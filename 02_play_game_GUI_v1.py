@@ -6,39 +6,8 @@ import random
 class ChooseRounds:
 
     def __init__(self):
-        self.intro_frame = Frame()
-        self.intro_frame.grid()
-
-        self.start_title = Label(self.intro_frame, text="Colour Quest",
-                                 font=("Arial", "16", "bold"))
-        self.start_title.grid(row=0, padx=5, pady=5)
-
-        start_instructions_text = "In each round you will be given six different colours" \
-                                  " to choose from. Pick a colour and see if you can beat the" \
-                                  " computer's score!\n\nTo begin, choose how many rounds you'd" \
-                                  " like to play..."
-
-        self.start_instructions = Label(self.intro_frame, text=start_instructions_text,
-                                        wraplength=400, justify="left")
-        self.start_instructions.grid(row=1, padx=5, pady=5)
-
-        self.button_frame = Frame(self.intro_frame)
-        self.button_frame.grid(row=2)
-
-        button_fg = "#FFFFFF"
-
-        round_button_properties = [
-            ["#f52a20", 3],
-            ["#15e631", 5],
-            ["#3027db", 10]
-        ]
-
-        # create round buttons
-        for item in range(3):
-            self.round_button = Button(self.button_frame, text=f"{round_button_properties[item][1]} Rounds",
-                                       width=12, bg=round_button_properties[item][0], fg=button_fg,
-                                       command=lambda i=item: self.to_play(round_button_properties[i][1]))
-            self.round_button.grid(row=0, column=item, padx=5, pady=5)
+        # invoke play class with three rounds for testing purposes
+        self.to_play(3)
 
     def to_play(self, num_rounds):
         Play(num_rounds)
@@ -57,8 +26,26 @@ class Play:
         # 'releases' help button
         self.play_box.protocol("WM_DELETE_WINDOW", partial(self.close_play))
 
+        # variables to work out statistics (when game ends)
+        self.rounds_wanted = IntVar()
+        self.rounds_wanted.set(num_rounds)
+
+        # initially set rounds played and won to 0
+        self.rounds_played = IntVar()
+        self.rounds_played.set(0)
+
+        self.rounds_won = IntVar()
+        self.rounds_won.set(0)
+
         self.play_frame = Frame(self.play_box, padx=10, pady=10)
         self.play_frame.grid()
+
+        # lists to hold computer and user score(s)
+        user_scores = []
+        computer_scores = []
+
+        # get all colours from .csv file for use in game
+        self.all_colours = self.get_all_colours()
 
         rounds_heading = "Choose - Round 1 of {}".format(num_rounds)
         self.rounds_heading = Label(self.play_frame, text=rounds_heading,
@@ -123,6 +110,9 @@ class Play:
         # to allow new game to start
         root.deiconify()
         self.play_box.destroy()
+
+    def get_all_colours(self):
+        csv_reader = csv.reader("00_colour_list_hex_v3.csv", delimiter=',')
 
 
 # main routine
