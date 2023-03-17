@@ -73,7 +73,7 @@ class Play:
                                  " a colour, the computer's choice and the results of" \
                                  " the round will be revealed."
         self.play_instructions = Label(self.play_frame, text=play_instructions_text,
-                                       wraplength=300, justify="left")
+                                       wraplength=350, justify="left")
         self.play_instructions.grid(row=1)
 
         # get colours for buttons for the round
@@ -95,18 +95,18 @@ class Play:
 
         computer_choice = "The Computer's choice will appear here"
         self.computer_choice = Label(self.play_frame, text=computer_choice, bg="#c4c4c4",
-                                     width=42)
+                                     width=50)
         self.computer_choice.grid(row=3, padx=5, pady=5)
 
         self.rounds_frame = Frame(self.play_frame, padx=10, pady=10)
         self.rounds_frame.grid(row=4)
 
-        self.round_info = Label(self.rounds_frame, text="Round 3: User -     Computer: -",
-                                bg="#d5e8d4")
+        self.round_info = Label(self.rounds_frame, text="Round 1: User -     Computer: -",
+                                bg="#d5e8d4", width=35)
         self.round_info.grid(row=0, column=0, padx=5)
 
         self.next_round = Button(self.rounds_frame, text="Next Round",
-                                 width=12, bg="#008BFC")
+                                 width=12, bg="#008BFC", state=DISABLED)
         self.next_round.grid(row=0, column=1, padx=5)
 
         self.total_stats = Label(self.play_frame, text="Totals:    User: -     Computer: -",
@@ -115,24 +115,21 @@ class Play:
         self.control_frame = Frame(self.play_frame, padx=10)
         self.control_frame.grid(row=5)
 
-        self.help_button = Button(self.control_frame, width=12, bg="#d6b11e",
-                                  text="Help")
-        self.help_button.grid(row=0, column=0, padx=5, pady=5)
+        control_buttons = [
+            ["#CC6600", "Help", "get help"],
+            ["#004C99", "Statistics", "get stats"],
+            ["#808080", "Start Over", "start over"]
+        ]
 
-        self.help_button = Button(self.control_frame, width=12, bg="#2e378f",
-                                  text="Statistics")
-        self.help_button.grid(row=0, column=1, padx=5, pady=5)
+        for item in range(3):
 
-        self.help_button = Button(self.control_frame, width=12, bg="#9c9c9c",
-                                  text="Start Over")
-        self.help_button.grid(row=0, column=2, padx=5, pady=5)
+            self.make_control_button = Button(self.control_frame, width=15,
+                                              bg=control_buttons[item][0],
+                                              text=control_buttons[item][1],
+                                              command=lambda i=item: self.to_do(control_buttons[i][2]))
+            self.make_control_button.grid(row=0, column=item, padx=5, pady=5)
 
-    # function closes play window and shows initial choose rounds window
-    def close_play(self):
-        # reshow root (choose round) and destroy current box
-        # to allow new game to start
-        root.deiconify()
-        self.play_box.destroy()
+
 
     # get all colour data from csv file
     def get_all_colours(self):
@@ -168,6 +165,27 @@ class Play:
 
     def to_compare(self, user_score):
         print("Your score is:", user_score)
+
+    def to_do(self, action):
+        if action == "get help":
+            self.get_help()
+        elif action == "get stats":
+            self.get_stats()
+        else:
+            self.close_play()
+
+    def get_stats(self):
+        print("You chose to get the statistics")
+    
+    def get_help(self):
+        print("You chose to get help")
+
+    # function closes play window and shows initial choose rounds window
+    def close_play(self):
+        # reshow root (choose round) and destroy current box
+        # to allow new game to start
+        root.deiconify()
+        self.play_box.destroy()
 
 
 # main routine
