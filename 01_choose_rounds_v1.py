@@ -3,6 +3,7 @@ from functools import partial
 import csv
 import random
 
+
 class ChooseRounds:
 
     def __init__(self):
@@ -57,6 +58,9 @@ class Play:
         # 'releases' help button
         self.play_box.protocol("WM_DELETE_WINDOW", partial(self.close_play))
 
+        # get all colours for use in game
+        self.all_colours = self.get_all_colours()
+
         self.play_frame = Frame(self.play_box, padx=10, pady=10)
         self.play_frame.grid()
 
@@ -72,12 +76,17 @@ class Play:
                                        wraplength=300, justify="left")
         self.play_instructions.grid(row=1)
 
+        # get colours for buttons for the round
+        button_colours_list = self.get_round_colours(self.all_colours)
+
         self.choice_frame = Frame(self.play_frame, padx=10, pady=10)
         self.choice_frame.grid(row=2)
 
         for item in range(6):
-            self.choice_button = Button(self.choice_frame, text="Choice {}".format(item+1),
-                                        width=12, bg="#2aa7c7")
+            self.choice_button = Button(self.choice_frame, text=button_colours_list[item][0],
+                                        width=15, bg=button_colours_list[item][0],
+                                        fg=button_colours_list[item][2],
+                                        command=lambda i=item: self.to_compare(button_colours_list[i][1]))
             # set up grid of multiple buttons with 3 columns and 2 rows
             if item < 3:
                 self.choice_button.grid(row=0, column=item, padx=5, pady=5)
@@ -118,11 +127,47 @@ class Play:
                                   text="Start Over")
         self.help_button.grid(row=0, column=2, padx=5, pady=5)
 
+    # function closes play window and shows initial choose rounds window
     def close_play(self):
         # reshow root (choose round) and destroy current box
         # to allow new game to start
         root.deiconify()
         self.play_box.destroy()
+
+    # get all colour data from csv file
+    def get_all_colours(self):
+
+        # open csv file and create reader
+        csv_file = open("00_colour_list_hex_v3.csv")
+        colour_data = list(csv.reader(csv_file, delimiter=','))
+
+        # remove first entry in list (header row)
+        colour_data.pop(0)
+
+        # add all colour data from csv file to list
+        return colour_data
+
+    # function gets the colours to be used in the round (no duplicate scores
+    # or colours)
+    def get_round_colours(self, all_colours):
+        colour_scores = []
+        round_colour_list = []
+
+        while len(round_colour_list) < 6:
+
+            colour_choice = random.choice(all_colours)
+
+            if colour_choice[1] not in colour_scores:
+
+                round_colour_list.append(colour_choice)
+                colour_scores.append(colour_choice[1])
+
+            all_colours.remove(colour_choice)
+
+        return round_colour_list
+
+    def to_compare(self, user_score):
+        print("Your score is:", user_score)
 
 
 # main routine
