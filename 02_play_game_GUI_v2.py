@@ -78,16 +78,23 @@ class Play:
         self.play_instructions.grid(row=1)
 
         # get colours for buttons for the round
-        button_colours_list = self.get_round_colours(self.all_colours)
+        self.button_colours_list = self.get_round_colours(self.all_colours)
+
+        # list to hold instances of different buttons
+        self.choice_button_ref = []
 
         self.choice_frame = Frame(self.play_frame, padx=10, pady=10)
         self.choice_frame.grid(row=2)
 
         for item in range(6):
-            self.choice_button = Button(self.choice_frame, text=button_colours_list[item][0],
-                                        width=15, bg=button_colours_list[item][0],
-                                        fg=button_colours_list[item][2],
-                                        command=lambda i=item: self.to_compare(button_colours_list[i][1]))
+            self.choice_button = Button(self.choice_frame, text=self.button_colours_list[item][0],
+                                        width=15, bg=self.button_colours_list[item][0],
+                                        fg=self.button_colours_list[item][2],
+                                        command=lambda i=item: self.to_compare(self.button_colours_list[i][1]))
+
+            # add button to reference list for later configuration
+            self.choice_button_ref.append(self.choice_button)
+
             # set up grid of multiple buttons with 3 columns and 2 rows
             if item < 3:
                 self.choice_button.grid(row=0, column=item, padx=5, pady=5)
@@ -107,14 +114,22 @@ class Play:
         self.round_info.grid(row=0, column=0, padx=5)
 
         self.next_round = Button(self.rounds_frame, text="Next Round",
-                                 width=12, bg="#008BFC", state=DISABLED)
+                                 width=12, bg="#008BFC", state=DISABLED,
+                                 config=self.new_round())
         self.next_round.grid(row=0, column=1, padx=5)
+
+        # at start, get 'new round'
+        self.new_round()
 
         self.total_stats = Label(self.play_frame, text="Totals:    User: -     Computer: -",
                                  bg="#f8cecc")
 
         self.control_frame = Frame(self.play_frame, padx=10)
         self.control_frame.grid(row=5)
+
+        # list to hold the control buttons so that text of 'start over'
+        # button can easily be changed to 'game over'
+        self.control_button_ref = []
 
         control_buttons = [
             ["#CC6600", "Help", "get help"],
@@ -128,9 +143,10 @@ class Play:
                                               bg=control_buttons[item][0],
                                               text=control_buttons[item][1],
                                               command=lambda i=item: self.to_do(control_buttons[i][2]))
+
+            self.control_button_ref.append(self.make_control_button)
+
             self.make_control_button.grid(row=0, column=item, padx=5, pady=5)
-
-
 
     # get all colour data from csv file
     def get_all_colours(self):
@@ -190,6 +206,25 @@ class Play:
         # to allow new game to start
         root.deiconify()
         self.play_box.destroy()
+
+    # updates gui to show a new round
+    def new_round(self):
+
+        # disable next button (re-enabled at end of the round)
+        self.next_button.config(state=DISABLED)
+
+        # empty button list so we can get new colours
+        self.button_colours_list = self.get_round_colors()
+
+        # set button bg, fg and text
+        count = 0
+        for item in self.choice_button_ref:
+            item['fg'] = self.button_colours_list[count][2]
+            item['bg'] = self.button_colours_list[count][0]
+            item['text'] = self.button_colours_list[count][0]
+            item['state'] = NORMAL
+
+            count += 1
 
 
 # main routine
