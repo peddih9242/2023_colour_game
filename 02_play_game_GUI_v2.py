@@ -53,6 +53,12 @@ class Play:
 
     def __init__(self, num_rounds):
 
+        self.rounds_wanted = IntVar(num_rounds)
+        self.rounds_played = IntVar(1)
+
+        self.user_scores = []
+        self.computer_scores = []
+
         self.play_box = Toplevel()
 
         # if users press cross at top, closes help and
@@ -90,7 +96,7 @@ class Play:
             self.choice_button = Button(self.choice_frame, text=self.button_colours_list[item][0],
                                         width=15, bg=self.button_colours_list[item][0],
                                         fg=self.button_colours_list[item][2],
-                                        command=lambda i=item: self.to_compare(self.button_colours_list[i][1]))
+                                        command=lambda i=item: self.to_compare(self.button_colours_list[i]))
 
             # add button to reference list for later configuration
             self.choice_button_ref.append(self.choice_button)
@@ -99,12 +105,12 @@ class Play:
             if item < 3:
                 self.choice_button.grid(row=0, column=item, padx=5, pady=5)
             else:
-                self.choice_button.grid(row=1, column=item-3, padx=5, pady=5)
+                self.choice_button.grid(row=1, column=item - 3, padx=5, pady=5)
 
         computer_choice = "The Computer's choice will appear here"
-        self.computer_choice = Label(self.play_frame, text=computer_choice, bg="#c4c4c4",
-                                     width=50)
-        self.computer_choice.grid(row=3, padx=5, pady=5)
+        self.comp_choice_label = Label(self.play_frame, text=computer_choice, bg="#c4c4c4",
+                                       width=50)
+        self.comp_choice_label.grid(row=3, padx=5, pady=5)
 
         self.rounds_frame = Frame(self.play_frame, padx=10, pady=10)
         self.rounds_frame.grid(row=4)
@@ -138,7 +144,6 @@ class Play:
         ]
 
         for item in range(3):
-
             self.make_control_button = Button(self.control_frame, width=15,
                                               bg=control_buttons[item][0],
                                               text=control_buttons[item][1],
@@ -172,16 +177,12 @@ class Play:
             colour_choice = random.choice(all_colours)
 
             if colour_choice[1] not in colour_scores:
-
                 round_colour_list.append(colour_choice)
                 colour_scores.append(colour_choice[1])
 
             all_colours.remove(colour_choice)
 
         return round_colour_list
-
-    def to_compare(self, user_score):
-        print("Your score is:", user_score)
 
     # sends user to function needed based on button pressed
     def to_do(self, action):
@@ -211,10 +212,10 @@ class Play:
     def new_round(self):
 
         # disable next button (re-enabled at end of the round)
-        self.next_button.config(state=DISABLED)
+        self.next_round.config(state=DISABLED)
 
         # empty button list so we can get new colours
-        self.button_colours_list = self.get_round_colors()
+        self.button_colours_list = self.get_round_colours(self.all_colours)
 
         # set button bg, fg and text
         count = 0
@@ -225,6 +226,98 @@ class Play:
             item['state'] = NORMAL
 
             count += 1
+
+        # retrieve numbers of rounds wanted / played
+        # and update heading
+        how_many = self.rounds_wanted.get()
+        current_round = self.rounds_played.get()
+        new_heading = "Choose: Round {} out of {}".format(current_round, how_many)
+
+    def to_compare(self, user_choice):
+
+        how_many = self.rounds_wanted.get()
+
+        # increase the rounds played by one
+        current_round = self.rounds_played.get()
+        current_round += 1
+        self.rounds_played.set(current_round)
+
+        # disable colour buttons
+        for item in self.choice_button_ref:
+            item.config(state=DISABLED)
+
+        # set up background colours
+        win_colour = "#D5E8D4"
+        lose_colour = "#F8CECC"
+
+        # retrieve user score, make it into an integer
+        # and add to list for stats
+        current_user_score = int(user_choice[1])
+        self.user_scores.append(current_user_score)
+
+        # remove user choice from button colours list (for computer choice)
+        remove_colour = self.button_colours_list.index(user_choice)
+        self.button_colours_list.remove(remove_colour)
+
+        # get computer choice and add to list for stats,
+        # change to integer before appending when getting score
+        comp_choice = random.choice(self.button_colours_list)
+        current_comp_score = int(comp_choice[1])
+
+        self.computer_scores.append(current_comp_score)
+
+        comp_announce = "The computer chose {}".format(comp_choice[0])
+        self.comp_choice_label.config(text=comp_announce,
+                                      bg=comp_choice[0],
+                                      fg=comp_choice[2])
+
+        # get colours and show results
+        if current_user_score > current_comp_score:
+            round_results_bg = win_colour
+        else:
+            round_results_bg = lose_colour
+
+        rounds_outcome_txt = "Round {}: User {} \tComputer {}".format(current_round,
+                                                                      current_user_score,
+                                                                      current_comp_score)
+
+        self.round_info.config(bg=round_results_bg,
+                               text=rounds_outcome_txt)
+
+        # get total scores for user and computer
+        total_user_score = sum(self.user_scores)
+        total_comp_score = sum(self.computer_scores)
+
+        # get colours and show results for total game
+        if total_user_score > total_comp_score:
+            round_results_bg = win_colour
+            status = "You Win!"
+        else:
+            round_results_bg = lose_colour
+            status = "You Lose!"
+
+        total_outcome_txt = "Total Score: User {} \tComputer {}".format(total_user_score,
+                                                                        total_comp_score)
+
+        # if the game is over, disable all buttons and change text
+        # of "next" button to either "You Win" or "You Lose" and
+        # disable all buttons
+        if current_round == how_many:
+            # disable 'next' button and change text based on if user won or lost
+            self.next_round.config(text=status,
+                                   state=DISABLED)
+
+            # update 'start over' button to 'play again'
+            start_over_button = self.control_button_ref[2]
+            start_over_button.config(text="Play Again",
+                                     bg="#009900")
+
+            # change all colour choice backgrounds to light gray
+            for item in self.choice_button_ref:
+                item['bg'] = "#C0C0C0"
+
+        else:
+            self.next_round.config(state=NORMAL)
 
 
 # main routine
