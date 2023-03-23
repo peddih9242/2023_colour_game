@@ -53,11 +53,14 @@ class Play:
 
     def __init__(self, num_rounds):
 
-        self.rounds_wanted = IntVar(num_rounds)
-        self.rounds_played = IntVar(1)
+        self.rounds_wanted = IntVar()
+        self.rounds_played = IntVar()
+
+        self.rounds_wanted.set(num_rounds)
+        self.rounds_played.set(0)
 
         self.user_scores = []
-        self.computer_scores = []
+        self.comp_scores = []
 
         self.play_box = Toplevel()
 
@@ -116,22 +119,23 @@ class Play:
         self.rounds_frame.grid(row=4)
 
         self.round_info = Label(self.rounds_frame, text="Round 1: User -     Computer: -",
-                                bg="#d5e8d4", width=35)
+                                bg="#fffdd1", width=35)
         self.round_info.grid(row=0, column=0, padx=5)
 
         self.next_round = Button(self.rounds_frame, text="Next Round",
                                  width=12, bg="#008BFC", state=DISABLED,
-                                 config=self.new_round())
+                                 command=lambda: self.new_round())
         self.next_round.grid(row=0, column=1, padx=5)
 
         # at start, get 'new round'
         self.new_round()
 
-        self.total_stats = Label(self.play_frame, text="Totals:    User: -     Computer: -",
-                                 bg="#f8cecc")
+        self.total_stats = Label(self.play_frame, text="Total Score: User: - \tComputer: -",
+                                 bg="#fffdd1", width=50)
+        self.total_stats.grid(row=5, padx=5, pady=5)
 
         self.control_frame = Frame(self.play_frame, padx=10)
-        self.control_frame.grid(row=5)
+        self.control_frame.grid(row=6, padx=10, pady=10)
 
         # list to hold the control buttons so that text of 'start over'
         # button can easily be changed to 'game over'
@@ -214,7 +218,7 @@ class Play:
         # disable next button (re-enabled at end of the round)
         self.next_round.config(state=DISABLED)
 
-        # empty button list so we can get new colours
+        # get new colours for buttons
         self.button_colours_list = self.get_round_colours(self.all_colours)
 
         # set button bg, fg and text
@@ -231,15 +235,21 @@ class Play:
         # and update heading
         how_many = self.rounds_wanted.get()
         current_round = self.rounds_played.get()
+        current_round += 1
+        self.rounds_played.set(current_round)
+
         new_heading = "Choose: Round {} out of {}".format(current_round, how_many)
 
+        self.rounds_heading.config(text=new_heading)
+
+    # alter information, stats and colour buttons
     def to_compare(self, user_choice):
 
         how_many = self.rounds_wanted.get()
 
         # increase the rounds played by one
         current_round = self.rounds_played.get()
-        current_round += 1
+
         self.rounds_played.set(current_round)
 
         # disable colour buttons
@@ -257,14 +267,14 @@ class Play:
 
         # remove user choice from button colours list (for computer choice)
         remove_colour = self.button_colours_list.index(user_choice)
-        self.button_colours_list.remove(remove_colour)
+        self.button_colours_list.remove(self.button_colours_list[remove_colour])
 
         # get computer choice and add to list for stats,
         # change to integer before appending when getting score
         comp_choice = random.choice(self.button_colours_list)
         current_comp_score = int(comp_choice[1])
 
-        self.computer_scores.append(current_comp_score)
+        self.comp_scores.append(current_comp_score)
 
         comp_announce = "The computer chose {}".format(comp_choice[0])
         self.comp_choice_label.config(text=comp_announce,
@@ -286,7 +296,7 @@ class Play:
 
         # get total scores for user and computer
         total_user_score = sum(self.user_scores)
-        total_comp_score = sum(self.computer_scores)
+        total_comp_score = sum(self.comp_scores)
 
         # get colours and show results for total game
         if total_user_score > total_comp_score:
@@ -298,6 +308,9 @@ class Play:
 
         total_outcome_txt = "Total Score: User {} \tComputer {}".format(total_user_score,
                                                                         total_comp_score)
+
+        self.total_stats.config(text=total_outcome_txt,
+                                bg=round_results_bg)
 
         # if the game is over, disable all buttons and change text
         # of "next" button to either "You Win" or "You Lose" and
@@ -318,7 +331,6 @@ class Play:
 
         else:
             self.next_round.config(state=NORMAL)
-
 
 # main routine
 if __name__ == "__main__":
