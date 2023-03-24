@@ -4,6 +4,7 @@ import csv
 import random
 
 
+# takes in how many rounds the user wants
 class ChooseRounds:
 
     def __init__(self):
@@ -49,6 +50,7 @@ class ChooseRounds:
         root.withdraw()
 
 
+# play component, where the user plays the game
 class Play:
 
     def __init__(self, num_rounds):
@@ -157,6 +159,8 @@ class Play:
 
             self.make_control_button.grid(row=0, column=item, padx=5, pady=5)
 
+        self.to_help_button = self.control_button_ref[0]
+
     # get all colour data from csv file
     def get_all_colours(self):
 
@@ -203,7 +207,9 @@ class Play:
 
     # directs user to help window
     def get_help(self):
-        print("You chose to get help")
+        # disable help button (prevents multiple instances of help window occurring)
+        self.to_help_button.config(state=DISABLED)
+        Help(self)
 
     # function closes play window and shows initial choose rounds window
     def close_play(self):
@@ -331,6 +337,47 @@ class Play:
 
         else:
             self.next_round.config(state=NORMAL)
+
+
+# shows user instructions to play the game
+class Help:
+
+    def __init__(self, partner):
+
+        self.help_box = Toplevel()
+        self.help_box.protocol("WM_DELETE_WINDOW", partial(self.close_help,
+                                                           partner))
+
+        self.help_frame = Frame(self.help_box, padx=10, pady=10, bg="#FFE6CC")
+        self.help_frame.grid()
+
+        self.help_heading = Label(self.help_frame, text="Help / Hints",
+                                  font=("Arial", "16", "bold"),
+                                  bg="#FFE6CC", justify="left")
+        self.help_heading.grid(row=0, padx=5, pady=5)
+
+        help_instructions = "Your goal in this game is to beat the computer and you" \
+                            " have an advantage - you get to choose your colour first." \
+                            " The points associated with the colours are based on hte colour's" \
+                            " hex code. The higher the value of the colour, the greater your score.\n\n" \
+                            "To see your statistics, click on the 'Statistics' button. Win the game by" \
+                            " scoring more than the computer overall. Don't be discouraged if you don't win" \
+                            " every round, it's your overall score that counts.\n\nGood luck! Choose carefully."
+
+        self.help_instructions = Label(self.help_frame, text=help_instructions,
+                                       wraplength=350, justify="left", bg="#FFE6CC")
+        self.help_instructions.grid(row=1, padx=5, pady=5)
+
+        self.close_help_button = Button(self.help_frame, text="Dismiss",
+                                        fg="#FFFFFF", bg="#CC6600",
+                                        command=lambda: self.close_help(partner),
+                                        width=15, activebackground="#e8a664")
+        self.close_help_button.grid(row=2, padx=5, pady=5)
+
+    # function closes help window
+    def close_help(self, partner):
+        partner.to_help_button.config(state=NORMAL)
+        self.help_box.destroy()
 
 
 # main routine
