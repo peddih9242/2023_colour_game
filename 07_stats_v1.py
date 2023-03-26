@@ -19,7 +19,6 @@ class ChooseRounds:
         root.withdraw()
 
 
-
 # play component, where the user plays the game
 class Play:
 
@@ -69,37 +68,6 @@ class Play:
         self.to_help_button = self.control_button_ref[0]
         self.to_stats_button = self.control_button_ref[1]
 
-    # get all colour data from csv file
-    def get_all_colours(self):
-
-        # open csv file and create reader
-        csv_file = open("00_colour_list_hex_v3.csv")
-        colour_data = list(csv.reader(csv_file, delimiter=','))
-
-        # remove first entry in list (header row)
-        colour_data.pop(0)
-
-        # add all colour data from csv file to list
-        return colour_data
-
-    # function gets the colours to be used in the round (no duplicate scores
-    # or colours)
-    def get_round_colours(self, all_colours):
-        colour_scores = []
-        round_colour_list = []
-
-        while len(round_colour_list) < 6:
-
-            colour_choice = random.choice(all_colours)
-
-            if colour_choice[1] not in colour_scores:
-                round_colour_list.append(colour_choice)
-                colour_scores.append(colour_choice[1])
-
-            all_colours.remove(colour_choice)
-
-        return round_colour_list
-
     # sends user to function needed based on button pressed
     def to_do(self, action):
         if action == "get help":
@@ -127,132 +95,11 @@ class Play:
         root.deiconify()
         self.play_box.destroy()
 
-    # updates gui to show a new round
-    def new_round(self):
-
-        # disable next button (re-enabled at end of the round)
-        self.next_round.config(state=DISABLED)
-
-        # get new colours for buttons
-        self.button_colours_list = self.get_round_colours(self.all_colours)
-
-        # set button bg, fg and text
-        count = 0
-        for item in self.choice_button_ref:
-            item['fg'] = self.button_colours_list[count][2]
-            item['bg'] = self.button_colours_list[count][0]
-            item['text'] = self.button_colours_list[count][0]
-            item['state'] = NORMAL
-
-            count += 1
-
-        # retrieve numbers of rounds wanted / played
-        # and update heading
-        how_many = self.rounds_wanted.get()
-        current_round = self.rounds_played.get()
-        current_round += 1
-        self.rounds_played.set(current_round)
-
-        new_heading = "Choose: Round {} out of {}".format(current_round, how_many)
-
-        self.rounds_heading.config(text=new_heading)
-
-    # alter information, stats and colour buttons
-    def to_compare(self, user_choice):
-
-        how_many = self.rounds_wanted.get()
-
-        # increase the rounds played by one
-        current_round = self.rounds_played.get()
-
-        self.rounds_played.set(current_round)
-
-        # disable colour buttons
-        for item in self.choice_button_ref:
-            item.config(state=DISABLED)
-
-        # set up background colours
-        win_colour = "#D5E8D4"
-        lose_colour = "#F8CECC"
-
-        # retrieve user score, make it into an integer
-        # and add to list for stats
-        current_user_score = int(user_choice[1])
-        self.user_scores.append(current_user_score)
-
-        # remove user choice from button colours list (for computer choice)
-        remove_colour = self.button_colours_list.index(user_choice)
-        self.button_colours_list.remove(self.button_colours_list[remove_colour])
-
-        # get computer choice and add to list for stats,
-        # change to integer before appending when getting score
-        comp_choice = random.choice(self.button_colours_list)
-        current_comp_score = int(comp_choice[1])
-
-        self.comp_scores.append(current_comp_score)
-
-        comp_announce = "The computer chose {}".format(comp_choice[0])
-        self.comp_choice_label.config(text=comp_announce,
-                                      bg=comp_choice[0],
-                                      fg=comp_choice[2])
-
-        # get colours and show results
-        if current_user_score > current_comp_score:
-            round_results_bg = win_colour
-        else:
-            round_results_bg = lose_colour
-
-        rounds_outcome_txt = "Round {}: User {} \tComputer {}".format(current_round,
-                                                                      current_user_score,
-                                                                      current_comp_score)
-
-        self.round_info.config(bg=round_results_bg,
-                               text=rounds_outcome_txt)
-
-        # get total scores for user and computer
-        total_user_score = sum(self.user_scores)
-        total_comp_score = sum(self.comp_scores)
-
-        # get colours and show results for total game
-        if total_user_score > total_comp_score:
-            round_results_bg = win_colour
-            status = "You Win!"
-        else:
-            round_results_bg = lose_colour
-            status = "You Lose!"
-
-        total_outcome_txt = "Total Score: User {} \tComputer {}".format(total_user_score,
-                                                                        total_comp_score)
-
-        self.total_stats.config(text=total_outcome_txt,
-                                bg=round_results_bg)
-
-        # if the game is over, disable all buttons and change text
-        # of "next" button to either "You Win" or "You Lose" and
-        # disable all buttons
-        if current_round == how_many:
-            # disable 'next' button and change text based on if user won or lost
-            self.next_round.config(text=status,
-                                   state=DISABLED)
-
-            # update 'start over' button to 'play again'
-            start_over_button = self.control_button_ref[2]
-            start_over_button.config(text="Play Again",
-                                     bg="#009900")
-
-            # change all colour choice backgrounds to light gray
-            for item in self.choice_button_ref:
-                item['bg'] = "#C0C0C0"
-
-        else:
-            self.next_round.config(state=NORMAL)
-
 
 # shows user instructions to play the game
 class Help:
 
     def __init__(self, partner):
-
         self.help_box = Toplevel()
         self.help_box.protocol("WM_DELETE_WINDOW", partial(self.close_help,
                                                            partner))
@@ -288,14 +135,68 @@ class Help:
         partner.to_help_button.config(state=NORMAL)
         self.help_box.destroy()
 
+
 # statistics window
 class Statistics:
 
     def __init__(self, partner):
 
+        rounds_played = 10
+
+        # set up hard coded score lists to be used as statistics
+        self.user_scores = [20, 14, 14, 13, 14, 11, 20, 10, 20, 11]
+        self.comp_scores = [12, 4, 6, 20, 20, 14, 10, 14, 16, 12]
+
+        self.row_details_column = ["", "Total", "Best Score", "Worst Score", "Average Score"]
+        self.user_score_list = self.get_stats(self.user_scores, "User")
+        self.comp_score_list = self.get_stats(self.comp_scores, "Computer")
+
+        self.add_to_table = [self.row_details_column, self.user_score_list, self.comp_score_list]
+        print(self.add_to_table)
+
+        # set up statistics window with working table
         self.stats_box = Toplevel()
-        self.stats.protocol("WM_DELETE_WINDOW", partial(self.close_help,
-                                                           partner))
+        self.stats_box.protocol("WM_DELETE_WINDOW", partial(self.close_stats,
+                                                            partner))
+
+        self.stats_frame = Frame(self.stats_box, padx=10, pady=10, bg="#a7d5f2")
+        self.stats_frame.grid()
+
+        self.stats_heading = Label(self.stats_frame, text="Statistics",
+                                   font=("Arial", "16", "bold"), bg="#a7d5f2")
+        self.stats_heading.grid(row=0, padx=5, pady=5)
+
+        self.stats_label = Label(self.stats_frame, text="Here are your game statistics...",
+                                 font=("Arial", "16"), bg="#a7d5f2", justify="left")
+        self.stats_label.grid(row=1, padx=5, pady=5)
+
+        self.data_frame = Frame(self.stats_frame, padx=10, pady=10, bg="#a7d5f2")
+        self.data_frame.grid(row=2)
+
+        # make table with statistics of game
+        for row in range(5):
+            for column in range(3):
+
+                self.create_table = Entry(self.data_frame, width=20, bg="#a7d5f2")
+                self.create_table.grid(row=row, column=column)
+
+                self.create_table.insert(END, self.add_to_table[row][column])
+
+        self.close_stats_button = Button(self.stats_frame, bg="#004C99",
+                                         fg="#FFFFFF", width=15, text="Dismiss",
+                                         command=lambda: self.close_stats(partner),
+                                         activebackground="#1b6dbf", height=2)
+        self.close_stats_button.grid(row=3, padx=5, pady=5)
+
+    # function calculates needed statistics (best, worst, total, average scores)
+    def get_stats(self, score_list, entity):
+        best_score = max(score_list)
+        worst_score = min(score_list)
+        total_score = sum(score_list)
+        average_score = total_score / len(score_list)
+
+        return [entity, total_score, best_score, worst_score, average_score]
+
     def close_stats(self, partner):
         partner.to_stats_button.config(state=NORMAL)
         self.stats_box.destroy()
