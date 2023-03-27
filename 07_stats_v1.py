@@ -142,6 +142,7 @@ class Statistics:
     def __init__(self, partner):
 
         rounds_played = 10
+        stats_bg_colour = "#a7d5f2"
 
         # set up hard coded score lists to be used as statistics
         self.user_scores = [20, 14, 14, 13, 14, 11, 20, 10, 20, 11]
@@ -151,36 +152,49 @@ class Statistics:
         self.user_score_list = self.get_stats(self.user_scores, "User")
         self.comp_score_list = self.get_stats(self.comp_scores, "Computer")
 
-        self.add_to_table = [self.row_details_column, self.user_score_list, self.comp_score_list]
-        print(self.add_to_table)
+        # background formatting for heading, odd and even rows
+        head_back = "#FFFFFF"
+        odd_rows = "#C9D6E8"
+        even_rows = stats_bg_colour
+
+        row_formats = [head_back, odd_rows, even_rows, odd_rows, even_rows]
+
+        # data for labels (one label / sub list)
+        all_labels = []
+
+        count = 0
+        for item in range(0, len(self.user_score_list)):
+            all_labels.append([self.row_details_column[item], row_formats[count]])
+            all_labels.append([self.user_score_list[item], row_formats[count]])
+            all_labels.append([self.comp_score_list[item], row_formats[count]])
+            count += 1
 
         # set up statistics window with working table
         self.stats_box = Toplevel()
         self.stats_box.protocol("WM_DELETE_WINDOW", partial(self.close_stats,
                                                             partner))
 
-        self.stats_frame = Frame(self.stats_box, padx=10, pady=10, bg="#a7d5f2")
+        self.stats_frame = Frame(self.stats_box, padx=10, pady=10, bg=stats_bg_colour)
         self.stats_frame.grid()
 
         self.stats_heading = Label(self.stats_frame, text="Statistics",
-                                   font=("Arial", "16", "bold"), bg="#a7d5f2")
+                                   font=("Arial", "16", "bold"), bg=stats_bg_colour)
         self.stats_heading.grid(row=0, padx=5, pady=5)
 
         self.stats_label = Label(self.stats_frame, text="Here are your game statistics...",
-                                 font=("Arial", "16"), bg="#a7d5f2", justify="left")
+                                 font=("Arial", "16"), bg=stats_bg_colour, justify="left")
         self.stats_label.grid(row=1, padx=5, pady=5)
 
-        self.data_frame = Frame(self.stats_frame, padx=10, pady=10, bg="#a7d5f2")
+        self.data_frame = Frame(self.stats_frame, padx=10, pady=10, bg=stats_bg_colour,
+                                borderwidth=1, relief="solid")
         self.data_frame.grid(row=2)
 
         # make table with statistics of game
-        for row in range(5):
-            for column in range(3):
+        for item in range(len(all_labels)):
 
-                self.create_table = Entry(self.data_frame, width=20, bg="#a7d5f2")
-                self.create_table.grid(row=row, column=column)
-
-                self.create_table.insert(END, self.add_to_table[row][column])
+            self.data_label = Label(self.data_frame, width=10, bg=all_labels[item][1],
+                                    height=2, padx=5, text=all_labels[item][0])
+            self.data_label.grid(row=item // 3, column=item % 3, padx=0, pady=0)
 
         self.close_stats_button = Button(self.stats_frame, bg="#004C99",
                                          fg="#FFFFFF", width=15, text="Dismiss",
