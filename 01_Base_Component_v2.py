@@ -159,7 +159,12 @@ class Play:
 
             self.make_control_button.grid(row=0, column=item, padx=5, pady=5)
 
+        # initiate help and stats buttons as variables to make calling buttons easier
         self.to_help_button = self.control_button_ref[0]
+        self.to_stats_button = self.control_button_ref[1]
+
+        # disable statistics button when no rounds are played
+        self.to_stats_button.config(state=DISABLED)
 
     # get all colour data from csv file
     def get_all_colours(self):
@@ -203,7 +208,7 @@ class Play:
 
     # directs user to table of statistics
     def get_stats(self):
-        print("You chose to get the statistics")
+        Statistics(self, self.user_scores, self.comp_scores)
 
     # directs user to help window
     def get_help(self):
@@ -262,9 +267,13 @@ class Play:
         for item in self.choice_button_ref:
             item.config(state=DISABLED)
 
+        # enable statistics button
+        self.to_stats_button.config(state=NORMAL)
+
         # set up background colours
         win_colour = "#D5E8D4"
         lose_colour = "#F8CECC"
+        tie_colour = "#FFFFFF"
 
         # retrieve user score, make it into an integer
         # and add to list for stats
@@ -290,8 +299,10 @@ class Play:
         # get colours and show results
         if current_user_score > current_comp_score:
             round_results_bg = win_colour
-        else:
+        elif current_user_score < current_comp_score:
             round_results_bg = lose_colour
+        else:
+            round_results_bg = tie_colour
 
         rounds_outcome_txt = "Round {}: User {} \tComputer {}".format(current_round,
                                                                       current_user_score,
@@ -308,9 +319,12 @@ class Play:
         if total_user_score > total_comp_score:
             round_results_bg = win_colour
             status = "You Win!"
-        else:
+        elif total_user_score < total_comp_score:
             round_results_bg = lose_colour
             status = "You Lose!"
+        else:
+            round_results_bg = tie_colour
+            status = "You Tied!"
 
         total_outcome_txt = "Total Score: User {} \tComputer {}".format(total_user_score,
                                                                         total_comp_score)
@@ -378,6 +392,83 @@ class Help:
     def close_help(self, partner):
         partner.to_help_button.config(state=NORMAL)
         self.help_box.destroy()
+
+
+# statistics window
+class Statistics:
+
+    def __init__(self, partner, user_scores, comp_scores):
+
+        stats_bg_colour = "#a7d5f2"
+
+        self.row_details_column = ["", "Total", "Best Score", "Worst Score", "Average Score"]
+        self.user_score_list = self.get_stats(user_scores, "User")
+        self.comp_score_list = self.get_stats(comp_scores, "Computer")
+
+        # background formatting for heading, odd and even rows
+        head_back = "#FFFFFF"
+        odd_rows = "#C9D6E8"
+        even_rows = stats_bg_colour
+
+        row_formats = [head_back, odd_rows, even_rows, odd_rows, even_rows]
+
+        # data for labels (one label / sub list)
+        all_labels = []
+
+        count = 0
+        for item in range(0, len(self.user_score_list)):
+            all_labels.append([self.row_details_column[item], row_formats[count]])
+            all_labels.append([self.user_score_list[item], row_formats[count]])
+            all_labels.append([self.comp_score_list[item], row_formats[count]])
+            count += 1
+
+        # set up statistics window with working table
+        self.stats_box = Toplevel()
+        self.stats_box.protocol("WM_DELETE_WINDOW", partial(self.close_stats,
+                                                            partner))
+
+        self.stats_frame = Frame(self.stats_box, padx=10, pady=10, bg=stats_bg_colour)
+        self.stats_frame.grid()
+
+        self.stats_heading = Label(self.stats_frame, text="Statistics",
+                                   font=("Arial", "16", "bold"), bg=stats_bg_colour)
+        self.stats_heading.grid(row=0, padx=5, pady=5)
+
+        self.stats_label = Label(self.stats_frame, text="Here are your game statistics...",
+                                 font=("Arial", "16"), bg=stats_bg_colour, justify="left")
+        self.stats_label.grid(row=1, padx=5, pady=5)
+
+        self.data_frame = Frame(self.stats_frame, padx=10, pady=10, bg=stats_bg_colour,
+                                borderwidth=1, relief="solid")
+        self.data_frame.grid(row=2)
+
+        # make table with statistics of game
+        for item in range(len(all_labels)):
+
+            self.data_label = Label(self.data_frame, width=10, bg=all_labels[item][1],
+                                    height=2, padx=5, text=all_labels[item][0])
+            self.data_label.grid(row=item // 3, column=item % 3, padx=0, pady=0)
+
+        self.close_stats_button = Button(self.stats_frame, bg="#004C99",
+                                         fg="#FFFFFF", width=15, text="Dismiss",
+                                         command=lambda: self.close_stats(partner),
+                                         activebackground="#1b6dbf", height=2)
+        self.close_stats_button.grid(row=3, padx=5, pady=5)
+
+    # function calculates needed statistics (best, worst, total, average scores)
+    def get_stats(self, score_list, entity):
+        best_score = max(score_list)
+        worst_score = min(score_list)
+        total_score = sum(score_list)
+        average_score = total_score / len(score_list)
+
+        rounded_average = round(average_score, 1)
+
+        return [entity, total_score, best_score, worst_score, rounded_average]
+
+    def close_stats(self, partner):
+        partner.to_stats_button.config(state=NORMAL)
+        self.stats_box.destroy()
 
 
 # main routine
